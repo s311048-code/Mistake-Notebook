@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<title>錯題整理器 Pro+</title>
+
+<style>
+body {
+    font-family: "Segoe UI";
+    background: linear-gradient(135deg, #74ebd5, #ACB6E5);
+    text-align: center;
+    margin: 0;
+}
+
+h1 {
+    color: white;
+    padding: 20px;
+}
+
+.container {
+    background: white;
+    width: 90%;
+    max-width: 500px;
+    margin: auto;
+    padding: 20px;
+    border-radius: 15px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+input, select, button {
+    margin: 5px;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+}
+
+button {
+    background: #6c63ff;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #574fd6;
+}
+
+.item {
+    background: #f9f9f9;
+    margin-top: 15px;
+    padding: 10px;
+    border-radius: 10px;
+    text-align: left;
+}
+
+img {
+    width: 100%;
+    border-radius: 10px;
+    margin-top: 5px;
+}
+</style>
+
+</head>
+
+<body>
+
+<h1>錯題整理器 Pro+</h1>
+
+<div class="container">
+
+<input type="text" id="question" placeholder="輸入錯題文字"><br>
+
+<select id="category">
+    <option>數學</option>
+    <option>英文</option>
+    <option>自然</option>
+    <option>社會</option>
+</select>
+
+<input type="text" id="newCategory" placeholder="新增科目">
+<button onclick="addCategory()">新增科目</button>
+
+<br>
+
+<input type="file" id="imageInput" accept="image/*"><br>
+
+<button onclick="addItem()">新增錯題</button>
+
+<div id="list"></div>
+
+</div>
+
+<script>
+let data = [];
+
+// 🔥 載入資料（開網頁時自動執行）
+window.onload = function() {
+    let saved = localStorage.getItem("mistakes");
+    if(saved) {
+        data = JSON.parse(saved);
+        show();
+    }
+};
+
+// 🔥 存資料（每次更新都存）
+function saveData() {
+    localStorage.setItem("mistakes", JSON.stringify(data));
+}
+
+function addCategory() {
+    let newCat = document.getElementById("newCategory").value;
+    if(newCat === "") return;
+
+    let select = document.getElementById("category");
+    let option = document.createElement("option");
+    option.text = newCat;
+    select.add(option);
+
+    document.getElementById("newCategory").value = "";
+}
+
+function addItem() {
+    let q = document.getElementById("question").value;
+    let c = document.getElementById("category").value;
+    let file = document.getElementById("imageInput").files[0];
+
+    if(q === "" && !file) return;
+
+    let reader = new FileReader();
+
+    reader.onload = function(e) {
+        data.push({
+            text: q,
+            category: c,
+            image: e.target.result
+        });
+
+        saveData(); // ⭐ 存
+        show();
+    };
+
+    if(file) {
+        reader.readAsDataURL(file);
+    } else {
+        data.push({text: q, category: c, image: null});
+        saveData(); // ⭐ 存
+        show();
+    }
+
+    document.getElementById("question").value = "";
+    document.getElementById("imageInput").value = "";
+}
+
+function show() {
+    let list = document.getElementById("list");
+    list.innerHTML = "";
+
+    data.forEach((item, index) => {
+        list.innerHTML += `
+        <div class="item">
+            <b>${item.category}</b><br>
+            ${item.text ? `<p>${item.text}</p>` : ""}
+            ${item.image ? `<img src="${item.image}">` : ""}
+            <button onclick="del(${index})">刪除</button>
+        </div>
+        `;
+    });
+}
+
+function del(i) {
+    data.splice(i,1);
+    saveData(); // ⭐ 刪除也要存
+    show();
+}
+</script>
+
+</body>
+</html>
